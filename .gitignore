@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.db
+imagenes/
+.pytest_cache/
+.claude/

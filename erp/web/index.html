@@ -1,0 +1,1023 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ERP Taller</title>
+<style>
+  :root {
+    --bg: #f4f2ee; --panel: #fff; --ink: #24211d; --muted: #6f6a62; --line: #e2ddd5;
+    --brand: #7a4b2a; --brand-ink: #fff; --ok: #2f7d4f; --warn: #b7791f; --bad: #b3362b;
+    --chip: #efe9e1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 system-ui, "Segoe UI", sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: var(--brand); color: var(--brand-ink); }
+  header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+  header .usuario { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  header button { background: rgba(255,255,255,.15); color: inherit; border: 0; }
+  nav { display: flex; gap: 4px; padding: 0 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  nav button { background: none; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 12px 14px; color: var(--muted); font-weight: 500; }
+  nav button.activo { color: var(--brand); border-bottom-color: var(--brand); }
+  main { padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .panel h2 { margin: 0 0 12px; font-size: 16px; }
+  .fila { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .fila > label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+  .grow { flex: 1; min-width: 200px; }
+  input, select, textarea, button { font: inherit; }
+  input, select, textarea { padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); }
+  textarea { width: 100%; min-height: 60px; resize: vertical; }
+  button { padding: 7px 14px; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  button.primario { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  button:disabled { opacity: .5; cursor: default; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .chip { display: inline-block; padding: 1px 8px; border-radius: 10px; background: var(--chip); font-size: 12px; }
+  .chip.bad { background: #f6dcd9; color: var(--bad); }
+  .chip.ok { background: #dcefe3; color: var(--ok); }
+  .chip.warn { background: #f8ecd4; color: var(--warn); }
+  .muted { color: var(--muted); font-size: 13px; }
+  .badge { background: var(--bad); color: #fff; border-radius: 10px; padding: 0 7px; font-size: 12px; margin-left: 4px; }
+  .msg { border-left: 4px solid var(--line); padding: 8px 12px; margin-bottom: 8px; background: #fff; border-radius: 4px; }
+  .msg.urgente { border-left-color: var(--bad); }
+  .msg.no-leido { background: #fbf6ef; }
+  .msg .cab { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  .msg .cab button { margin-left: auto; padding: 2px 10px; font-size: 13px; }
+  .pasos { display: flex; gap: 2px; }
+  .pasos span { flex: 1; height: 6px; background: var(--line); border-radius: 2px; min-width: 18px; }
+  .pasos span.hecho { background: var(--brand); }
+  #toast { position: fixed; bottom: 20px; right: 20px; max-width: 420px; padding: 12px 16px; border-radius: 8px; color: #fff; display: none; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+  #toast.ok { background: var(--ok); } #toast.bad { background: var(--bad); }
+  dialog { border: 1px solid var(--line); border-radius: 10px; padding: 20px; min-width: 380px; }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog h3 { margin-top: 0; }
+  dialog .acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  dialog label { display: block; margin-bottom: 10px; font-size: 13px; color: var(--muted); }
+  dialog label input, dialog label select { width: 100%; margin-top: 3px; }
+  #login { max-width: 420px; margin: 80px auto; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .chips .grupo-titulo { margin-right: 6px; }
+  .chips .grupo-titulo .filtro { font-weight: 600; background: var(--chip); }
+  .filtro { padding: 4px 12px; border-radius: 16px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+  .filtro .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .filtro .badge { margin: 0; }
+  .filtro.activo, .chips .grupo-titulo .filtro.activo { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  .filtro.activo .n { color: inherit; opacity: .8; }
+  .modelo { display: flex; gap: 18px; align-items: flex-start; }
+  .modelo .foto-sofa { width: 260px; flex-shrink: 0; aspect-ratio: 4 / 3; border-radius: 8px; border: 1px solid var(--line);
+    object-fit: cover; background: var(--bg); cursor: zoom-in; }
+  .modelo .sin-foto { display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; cursor: default; }
+  .modelo .datos { flex: 1; min-width: 0; overflow-x: auto; }
+  .panel { overflow-x: auto; }
+  @media (max-width: 960px) { .modelo { flex-direction: column; } .modelo .foto-sofa { width: 100%; max-width: 420px; } }
+  img.mini { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); cursor: zoom-in; display: block; }
+  .foto-celda { display: flex; align-items: center; gap: 4px; }
+  .foto-celda .vacia { width: 56px; height: 56px; border: 1px dashed var(--line); border-radius: 6px; display: flex;
+    align-items: center; justify-content: center; color: var(--muted); font-size: 11px; text-align: center; cursor: pointer; }
+  .foto-celda button { padding: 2px 7px; font-size: 12px; }
+  .subir-foto { display: flex; gap: 12px; align-items: center; margin-top: 12px; }
+  .subir-foto img, .subir-foto .vacia { width: 160px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+  .subir-foto .vacia { border-style: dashed; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; }
+  #visor { padding: 0; border: 0; background: transparent; max-width: 94vw; max-height: 92vh; }
+  #visor img { max-width: 94vw; max-height: 86vh; display: block; border-radius: 8px; }
+  #visor p { color: #fff; text-align: center; margin: 8px 0 0; font-size: 15px; }
+  #visor::backdrop { background: rgba(0, 0, 0, .82); }
+
+  /* ================= MÓVIL ================= */
+  @media (max-width: 640px) {
+    body { font-size: 15px; }
+    /* Cabecera compacta */
+    header { padding: 8px 12px; gap: 8px; }
+    header h1 { font-size: 16px; line-height: 1.2; }
+    header h1 span { display: none; }
+    header .usuario { gap: 6px; font-size: 13px; text-align: right; }
+    header .usuario button { padding: 6px 10px; font-size: 13px; white-space: nowrap; }
+    /* Pestañas: una sola fila que se desliza con el dedo */
+    nav { overflow-x: auto; padding: 0 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { flex-shrink: 0; white-space: nowrap; padding: 12px 10px; }
+    main { padding: 10px; }
+    .panel { padding: 12px; border-radius: 10px; margin-bottom: 10px; }
+    /* Formularios: un campo por fila, tamaño cómodo para el dedo, sin zoom automático en iPhone */
+    .fila { gap: 8px; }
+    .fila > label { flex: 1 1 100%; min-width: 0; }
+    .fila > label[style*="flex-direction:row"] { flex: 1 1 auto; }
+    .fila > label input:not([type=checkbox]), .fila > label select { width: 100% !important; }
+    .fila > button { flex: 1 1 auto; }
+    .grow { min-width: 0; }
+    input, select, textarea { font-size: 16px; }
+    button { min-height: 40px; }
+    /* Filtros del stock: cada grupo en una fila deslizable */
+    .chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .filtro { flex-shrink: 0; min-height: 34px; white-space: nowrap; }
+    .no-movil { display: none; }
+    .solo-movil { display: inline; }
+    /* Tablas → tarjetas: cada fila es una tarjeta y cada dato lleva su título delante */
+    table, tbody, tr, td { display: block; width: 100%; }
+    table { min-width: 0 !important; }
+    thead { display: none; }
+    tbody tr { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin-bottom: 10px; background: var(--panel); }
+    td { position: relative; border: 0; padding: 6px 0 6px 36%; text-align: left !important; width: auto !important; min-height: 32px; }
+    td::before { content: attr(data-label); position: absolute; left: 0; top: 8px; width: 33%; font-size: 11px;
+      font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); }
+    td[data-label=""] { padding-left: 0; }
+    td[data-label=""]::before { content: none; }
+    td.vacio { text-align: center !important; color: var(--muted); }
+    td button { margin: 2px 4px 2px 0; }
+    tbody tr td:last-child[data-label=""] { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px; }
+    tbody tr td:last-child[data-label=""] button { flex: 1 1 auto; margin: 0; }
+    /* Tabla del preparado al editar: los campos ocupan todo el ancho */
+    table.preparado tbody tr { padding: 8px 12px; }
+    table.preparado tbody td { padding: 4px 0 4px 32%; }
+    table.preparado tbody td[data-label=""] { padding-left: 0; }
+    table.preparado tbody td::before { top: 14px; }
+    /* Mensajes */
+    .msg .cab { flex-wrap: wrap; }
+    .msg .cab button { margin-left: 0; }
+    /* Diálogos a pantalla casi completa */
+    dialog { min-width: 0; width: calc(100vw - 16px) !important; max-width: none; max-height: calc(100dvh - 16px); padding: 16px; }
+    dialog .acciones { position: sticky; bottom: -16px; background: var(--panel); padding: 10px 0; margin-bottom: -16px; }
+    dialog .acciones button { flex: 1; }
+    .subir-foto { flex-wrap: wrap; }
+    #toast { left: 10px; right: 10px; bottom: 10px; max-width: none; }
+    .ficha { gap: 12px; }
+    .modelo .foto-sofa { max-width: none; }
+    img.mini { width: 72px; height: 72px; }
+  }
+  table.preparado td { padding: 4px; }
+  table.preparado input, table.preparado select { width: 100%; padding: 5px 7px; }
+  .ficha { display: flex; gap: 18px; flex-wrap: wrap; margin: 6px 0 12px; }
+  .ficha div { font-size: 13px; color: var(--muted); }
+  .ficha b { display: block; color: var(--ink); font-size: 15px; font-weight: 500; }
+  .oculto { display: none !important; }
+  .solo-movil { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Taller <span style="font-weight:400;opacity:.75;font-size:14px">· ERP</span></h1>
+  <div class="usuario oculto" id="cab-usuario">
+    <span id="nombre-usuario"></span>
+    <button onclick="salir()">Cambiar<span class="no-movil"> de usuario</span></button>
+  </div>
+</header>
+
+<section id="login" class="panel">
+  <h2>¿Quién eres?</h2>
+  <p class="muted">Elige tu nombre para ver tus mensajes y trabajar en el ERP.</p>
+  <div class="fila">
+    <select id="sel-usuario" class="grow"></select>
+    <button class="primario" onclick="entrar()">Entrar</button>
+  </div>
+</section>
+
+<div id="app" class="oculto">
+  <nav>
+    <button data-vista="mensajes">Mensajes<span id="badge" class="badge oculto"></span></button>
+    <button data-vista="almacen">Stock general</button>
+    <button data-vista="ordenes">Órdenes</button>
+    <button data-vista="productos">Productos</button>
+    <button data-vista="modelos" id="nav-modelos" class="oculto">Modelos de sofás</button>
+    <button data-vista="compras" id="nav-compras" class="oculto">Compras</button>
+  </nav>
+  <main>
+
+    <!-- MENSAJES -->
+    <section id="v-mensajes" class="vista">
+      <div class="panel">
+        <h2>Enviar mensaje</h2>
+        <div class="fila">
+          <label>Para<select id="m-destino"></select></label>
+          <label>Prioridad<select id="m-prioridad"><option value="normal">Normal</option><option value="urgente">Urgente</option><option value="baja">Baja</option></select></label>
+          <label>Orden (opcional)<input id="m-orden" type="number" min="1" style="width:110px"></label>
+        </div>
+        <p><textarea id="m-texto" placeholder="Escribe el mensaje…"></textarea></p>
+        <button class="primario" onclick="enviarMensaje()">Enviar</button>
+      </div>
+      <div class="panel">
+        <div class="fila" style="margin-bottom:12px">
+          <h2 style="margin:0" class="grow">Bandeja</h2>
+          <label style="flex-direction:row;align-items:center"><input type="checkbox" id="m-no-leidos" onchange="cargarMensajes()"> Solo no leídos</label>
+        </div>
+        <div id="lista-mensajes"></div>
+      </div>
+    </section>
+
+    <!-- STOCK GENERAL (todas las secciones) -->
+    <section id="v-almacen" class="vista oculto">
+      <div class="panel">
+        <div class="fila">
+          <label class="grow">Buscar (nombre, código o ubicación; con lector de códigos pulsa Intro)
+            <input id="a-buscar" placeholder="Goma, ESQ-NORD-3P, Nave 2…" oninput="pintarMateriales()" onkeydown="if(event.key==='Enter')escaneo()"></label>
+          <label>Modelo<select id="a-modelo" onchange="pintarMateriales()"><option value="">Todos</option></select></label>
+          <label style="flex-direction:row;align-items:center"><input type="checkbox" id="a-bajo" onchange="pintarMateriales()"> Solo bajo mínimo</label>
+          <button onclick="dlgMaterial()">+ Nuevo artículo</button>
+          <button onclick="dlgCategoria()">+ Categoría</button>
+        </div>
+        <div id="a-chips" style="margin-top:14px"></div>
+      </div>
+      <div class="panel">
+        <p class="muted" id="a-resumen" style="margin:0 0 8px"></p>
+        <table>
+          <thead><tr><th>Código</th><th>Artículo</th><th>Categoría</th><th>Ubicación</th><th class="num">Stock</th><th class="num">Mínimo</th><th></th></tr></thead>
+          <tbody id="tabla-materiales"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Últimos movimientos</h2>
+        <table>
+          <thead><tr><th>Fecha</th><th>Material</th><th>Tipo</th><th class="num">Cantidad</th><th>Motivo</th><th>Quién</th></tr></thead>
+          <tbody id="tabla-movimientos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ÓRDENES -->
+    <section id="v-ordenes" class="vista oculto">
+      <div class="panel">
+        <h2>Nueva orden</h2>
+        <div class="fila">
+          <label class="grow">Producto<select id="o-producto" onchange="infoProducto()"></select></label>
+          <label>Cantidad<input id="o-cantidad" type="number" min="1" value="1" style="width:90px" oninput="infoProducto()"></label>
+          <label class="grow">Cliente (vacío = fabricar para stock)<input id="o-cliente" oninput="infoProducto()"></label>
+          <label class="grow">Notas<input id="o-notas"></label>
+        </div>
+        <p class="fila">
+          <label style="flex-direction:row;align-items:center"><input type="checkbox" id="o-desde-stock" disabled> Servir desde producto terminado</label>
+          <span id="o-info" class="muted"></span>
+        </p>
+        <div id="o-necesidades"></div>
+        <button class="primario" onclick="crearOrden()">Crear orden</button>
+      </div>
+      <div class="panel">
+        <div class="fila" style="margin-bottom:12px">
+          <h2 style="margin:0" class="grow">Órdenes</h2>
+          <label>Ver<select id="o-filtro" onchange="cargarOrdenes()">
+            <option value="abiertas">En curso</option><option value="">Todas</option>
+            <option value="stock">Solo para stock</option><option value="cliente">Solo pedidos de cliente</option></select></label>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Producto</th><th class="num">Uds.</th><th>Para</th><th>Estado</th><th style="width:160px">Progreso</th><th></th></tr></thead>
+          <tbody id="tabla-ordenes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PRODUCTOS -->
+    <section id="v-productos" class="vista oculto">
+      <div class="panel">
+        <div class="fila"><h2 class="grow" style="margin:0">Productos y escandallos</h2><button onclick="dlgProducto()">+ Nuevo producto</button></div>
+      </div>
+      <div id="lista-productos"></div>
+    </section>
+
+    <!-- MODELOS DE SOFÁS (corte) -->
+    <section id="v-modelos" class="vista oculto">
+      <div class="panel">
+        <div class="fila">
+          <label class="grow">Buscar modelo<input id="mo-buscar" placeholder="Nombre, código o forma…" oninput="pintarModelos()"></label>
+          <button class="primario" onclick="dlgModelo()">+ Nuevo modelo</button>
+        </div>
+      </div>
+      <div id="lista-modelos"></div>
+    </section>
+
+    <!-- COMPRAS (oficina) -->
+    <section id="v-compras" class="vista oculto">
+      <div class="panel">
+        <h2>Sugerencias de compra</h2>
+        <p class="muted" style="margin-top:-6px">Materiales bajo mínimo. La cantidad propuesta repone hasta el doble del mínimo, descontando lo que ya está pedido.</p>
+        <div id="c-sugerencias"></div>
+      </div>
+      <div class="panel">
+        <h2>Nuevo pedido manual</h2>
+        <div class="fila">
+          <label class="grow">Proveedor<input id="c-proveedor" list="c-proveedores" placeholder="Espumas Ejemplo"></label>
+          <label class="grow">Notas para el proveedor<input id="c-notas" placeholder="Entrega por la mañana…"></label>
+        </div>
+        <datalist id="c-proveedores"></datalist>
+        <table class="preparado" style="margin-top:10px">
+          <thead><tr><th>Material</th><th style="width:140px">Cantidad</th><th style="width:50px"></th></tr></thead>
+          <tbody id="c-lineas"></tbody>
+        </table>
+        <div class="fila" style="margin-top:10px">
+          <button onclick="lineaCompra()">+ Añadir material</button>
+          <button class="primario" onclick="crearPedidoManual()">Crear pedido</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="fila" style="margin-bottom:12px">
+          <h2 style="margin:0" class="grow">Pedidos a proveedores</h2>
+          <label>Ver<select id="c-filtro" onchange="cargarPedidosCompra()">
+            <option value="abiertos">Pendientes (borrador y enviados)</option><option value="">Todos</option>
+            <option value="recibido">Recibidos</option><option value="cancelado">Cancelados</option></select></label>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Proveedor</th><th>Material</th><th>Estado</th><th>Fechas</th><th></th></tr></thead>
+          <tbody id="c-pedidos"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Diálogo movimiento -->
+<dialog id="dlg-mov">
+  <h3 id="mov-titulo"></h3>
+  <p class="muted" id="mov-info"></p>
+  <label>Operación<select id="mov-tipo" onchange="ajustarDlgMov()">
+    <option value="entrada">Entrada (llega material)</option>
+    <option value="salida">Salida (se usa material)</option>
+    <option value="recuento">Recuento (he contado lo que hay)</option></select></label>
+  <label id="mov-cant-label">Cantidad<input id="mov-cantidad" type="number" min="0" step="any"></label>
+  <label>Motivo<input id="mov-motivo" placeholder="Albarán, orden, muestrario…"></label>
+  <div class="acciones"><button onclick="this.closest('dialog').close()">Cancelar</button><button class="primario" onclick="guardarMov()">Guardar</button></div>
+</dialog>
+
+<!-- Diálogo recepción de pedido -->
+<dialog id="dlg-recibir">
+  <h3 id="r-titulo"></h3>
+  <p class="muted">Indica lo que ha llegado de verdad. Se dará entrada en el almacén.</p>
+  <table><thead><tr><th>Material</th><th class="num">Pedido</th><th style="width:130px">Recibido</th></tr></thead>
+    <tbody id="r-lineas"></tbody></table>
+  <div class="acciones"><button onclick="this.closest('dialog').close()">Cancelar</button><button class="primario" onclick="confirmarRecepcion()">Dar entrada</button></div>
+</dialog>
+
+<!-- Diálogo categoría -->
+<dialog id="dlg-categoria">
+  <h3>Nueva categoría</h3>
+  <label>Nombre<input id="nc-nombre" placeholder="reposapiés, muelles, botones…"></label>
+  <label>Tipo<select id="nc-grupo">
+    <option value="material">Material (se compra: goma, guata, tela…)</option>
+    <option value="pieza">Pieza (se fabrica: brazo, respaldo, esqueleto…)</option></select></label>
+  <div class="acciones"><button onclick="this.closest('dialog').close()">Cancelar</button><button class="primario" onclick="guardarCategoria()">Crear</button></div>
+</dialog>
+
+<!-- Diálogo material -->
+<dialog id="dlg-material">
+  <h3>Nuevo artículo</h3>
+  <label>Código<input id="nm-codigo" placeholder="TEL-LINO-AZUL, BRZ-ROMA…"></label>
+  <label>Nombre<input id="nm-nombre"></label>
+  <label>Categoría<select id="nm-categoria"></select></label>
+  <label>Modelo (opcional, para piezas de un sofá concreto)<select id="nm-modelo"></select></label>
+  <label>Unidad<select id="nm-unidad"><option>m</option><option>m2</option><option>ud</option><option>kg</option></select></label>
+  <label>Stock inicial<input id="nm-stock" type="number" min="0" step="any" value="0"></label>
+  <label>Stock mínimo<input id="nm-minimo" type="number" min="0" step="any" value="0"></label>
+  <label>Ubicación<input id="nm-ubicacion"></label>
+  <label>Proveedor<input id="nm-proveedor"></label>
+  <div class="acciones"><button onclick="this.closest('dialog').close()">Cancelar</button><button class="primario" onclick="guardarMaterial()">Guardar</button></div>
+</dialog>
+
+<!-- Diálogo producto -->
+<dialog id="dlg-producto">
+  <h3>Nuevo producto</h3>
+  <label>Código<input id="np-codigo" placeholder="SOF-CHAISE-3P"></label>
+  <label>Nombre<input id="np-nombre" placeholder="Sofá chaise longue 3 plazas"></label>
+  <p class="muted">Escandallo: materiales para fabricar <b>1 unidad</b></p>
+  <div id="np-lineas"></div>
+  <button onclick="lineaEscandallo()">+ Material</button>
+  <div class="acciones"><button onclick="this.closest('dialog').close()">Cancelar</button><button class="primario" onclick="guardarProducto()">Guardar</button></div>
+</dialog>
+
+<!-- Diálogo modelo de sofá -->
+<dialog id="dlg-modelo" style="width:min(1150px,96vw)">
+  <h3 id="mo-titulo">Nuevo modelo</h3>
+  <div class="fila">
+    <label>Código<input id="mo-codigo" placeholder="SOF-CHAISE-3P" style="width:170px"></label>
+    <label class="grow">Nombre<input id="mo-nombre" placeholder="Sofá chaise longue 3 plazas"></label>
+    <label>Forma<input id="mo-forma" list="formas" placeholder="Recto, chaise…" style="width:170px"></label>
+  </div>
+  <datalist id="formas"><option value="Recto"><option value="Chaise longue"><option value="Rinconera"><option value="Curvo"><option value="Sillón"><option value="Cama"></datalist>
+  <div class="fila" style="margin-top:10px">
+    <label>Ancho (cm)<input id="mo-ancho" type="number" min="0" step="any" style="width:100px"></label>
+    <label>Fondo (cm)<input id="mo-fondo" type="number" min="0" step="any" style="width:100px"></label>
+    <label>Alto (cm)<input id="mo-alto" type="number" min="0" step="any" style="width:100px"></label>
+    <label>Alto asiento (cm)<input id="mo-alto-asiento" type="number" min="0" step="any" style="width:120px"></label>
+    <label class="grow">Descripción<input id="mo-descripcion" placeholder="Brazo recto, respaldo fijo…"></label>
+  </div>
+  <div class="subir-foto">
+    <div id="mo-foto-vista"></div>
+    <div>
+      <b>Foto del sofá completo</b>
+      <div class="fila" style="margin-top:8px">
+        <button onclick="$('mo-foto-input').click()">Elegir foto…</button>
+        <button id="mo-foto-quitar" onclick="ponerFotoModelo(null)">Quitar</button>
+      </div>
+      <input type="file" id="mo-foto-input" accept="image/*" class="oculto" onchange="fotoModeloElegida(this)">
+      <input type="hidden" id="mo-imagen">
+    </div>
+  </div>
+  <h3 style="margin:18px 0 6px">Preparado</h3>
+  <p class="muted" style="margin-top:0">Qué goma, guata, tela… lleva cada pieza. El material del almacén es opcional: si no está dado de alta, escríbelo en la descripción.</p>
+  <div style="overflow-x:auto"><table class="preparado" style="min-width:1020px">
+    <thead><tr><th>Foto</th><th>Pieza</th><th>Tipo</th><th>Material del almacén</th><th>Descripción</th><th>Medidas</th><th>Cant.</th><th>Notas</th><th></th></tr></thead>
+    <tbody id="mo-lineas"></tbody>
+  </table></div>
+  <datalist id="piezas"><option value="Asiento"><option value="Respaldo"><option value="Brazo"><option value="Arcón"><option value="Cojín asiento"><option value="Cojín respaldo"><option value="Chaise"><option value="Bastidor"><option value="Pata"></datalist>
+  <datalist id="tipos"><option value="Goma"><option value="Guata"><option value="Tela"><option value="Madera"><option value="Rafia"><option value="Cincha"><option value="Fibra"><option value="Herraje"></datalist>
+  <div class="fila" style="margin-top:10px">
+    <button onclick="lineaPreparado()">+ Añadir material</button>
+    <button onclick="dlgMaterial()">+ Dar de alta material nuevo en almacén</button>
+  </div>
+  <div class="acciones"><button onclick="this.closest('dialog').close()">Cancelar</button><button class="primario" onclick="guardarModelo()">Guardar modelo</button></div>
+</dialog>
+
+<!-- Visor de fotos -->
+<dialog id="visor" onclick="this.close()"><img id="visor-img" alt=""><p id="visor-pie"></p></dialog>
+
+<div id="toast"></div>
+
+<script>
+const DEPTOS = ["almacen", "cinchado", "corte", "costura", "tapizado", "montaje", "oficina"];
+const NOMBRE_DEPTO = {almacen: "Almacén", cinchado: "Cinchado", corte: "Corte", costura: "Costura", tapizado: "Tapizado", montaje: "Montaje", oficina: "Oficina"};
+const FLUJO = ["pendiente", "cinchado", "corte", "costura", "tapizado", "montaje", "terminada", "entregada"];
+
+let usuario = null, trabajadores = [], materiales = [], productos = [], movActual = null;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = n => Number(n).toLocaleString("es-ES", {maximumFractionDigits: 2});
+
+async function api(ruta, opciones = {}) {
+  const r = await fetch(ruta, {headers: {"Content-Type": "application/json"}, ...opciones,
+                               body: opciones.body ? JSON.stringify(opciones.body) : undefined});
+  if (r.status === 204) return null;
+  const datos = await r.json();
+  if (!r.ok) {
+    const err = new Error(datos.error || (datos.detail || []).map(d => d.msg).join(", ") || "Error");
+    err.detalle = datos.detalle;
+    throw err;
+  }
+  return datos;
+}
+
+function aviso(texto, ok = true) {
+  const t = $("toast");
+  t.innerHTML = texto; t.className = ok ? "ok" : "bad"; t.style.display = "block";
+  clearTimeout(t._t); t._t = setTimeout(() => t.style.display = "none", ok ? 3000 : 7000);
+}
+const fallo = e => aviso(esc(e.message) + (Array.isArray(e.detalle)
+  ? "<br>" + e.detalle.map(f => `Falta ${num(f.falta)} ${esc(f.unidad)} de ${esc(f.nombre)}`).join("<br>") : ""), false);
+
+// ---------- Usuario ----------
+async function inicio() {
+  trabajadores = await api("/trabajadores");
+  $("sel-usuario").innerHTML = trabajadores.map(t =>
+    `<option value="${t.id}">${esc(t.nombre)} — ${NOMBRE_DEPTO[t.departamento]}</option>`).join("");
+  let guardado = null;
+  try { guardado = localStorage.getItem("erp_usuario"); } catch {}
+  const t = trabajadores.find(t => String(t.id) === guardado);
+  if (t) abrir(t);
+}
+function entrar() {
+  const t = trabajadores.find(t => String(t.id) === $("sel-usuario").value);
+  if (!t) return;
+  try { localStorage.setItem("erp_usuario", t.id); } catch {}
+  abrir(t);
+}
+function salir() {
+  try { localStorage.removeItem("erp_usuario"); } catch {}
+  location.reload();
+}
+function abrir(t) {
+  usuario = t;
+  $("login").classList.add("oculto");
+  $("app").classList.remove("oculto");
+  $("cab-usuario").classList.remove("oculto");
+  $("nombre-usuario").textContent = `${t.nombre} · ${NOMBRE_DEPTO[t.departamento]}`;
+  $("m-destino").innerHTML = `<option value="">Toda la fábrica</option>` +
+    `<optgroup label="Departamento">${DEPTOS.map(d => `<option value="d:${d}">${NOMBRE_DEPTO[d]}</option>`).join("")}</optgroup>` +
+    `<optgroup label="Persona">${trabajadores.filter(x => x.id !== t.id).map(x => `<option value="p:${x.id}">${esc(x.nombre)}</option>`).join("")}</optgroup>`;
+  const veModelos = ["corte", "oficina"].includes(t.departamento);
+  $("nav-modelos").classList.toggle("oculto", !veModelos);
+  $("nav-compras").classList.toggle("oculto", t.departamento !== "oficina");
+  ver(t.departamento === "almacen" ? "almacen" : t.departamento === "corte" ? "modelos" : "mensajes");
+  contarNoLeidos();
+  setInterval(() => contarNoLeidos().catch(() => {}), 30000);  // un corte de red puntual no es un error
+}
+
+// ---------- Navegación ----------
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => ver(b.dataset.vista));
+function ver(vista) {
+  document.querySelectorAll(".vista").forEach(v => v.classList.toggle("oculto", v.id !== "v-" + vista));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("activo", b.dataset.vista === vista));
+  ({mensajes: cargarMensajes, almacen: cargarAlmacen, ordenes: cargarOrdenes, productos: cargarProductos,
+    modelos: cargarModelos, compras: cargarCompras})[vista]();
+}
+
+// ---------- Mensajes ----------
+async function contarNoLeidos() {
+  const n = (await api(`/trabajadores/${usuario.id}/bandeja?no_leidos=true`)).length;
+  $("badge").textContent = n; $("badge").classList.toggle("oculto", !n);
+  document.title = (n ? `(${n}) ` : "") + "ERP Taller";
+}
+async function cargarMensajes() {
+  const lista = await api(`/trabajadores/${usuario.id}/bandeja?no_leidos=${$("m-no-leidos").checked}`);
+  $("lista-mensajes").innerHTML = lista.length ? lista.map(m => {
+    const para = m.destinatario_id ? "a ti" : m.departamento_destino ? NOMBRE_DEPTO[m.departamento_destino] : "Todos";
+    return `<div class="msg ${m.prioridad} ${m.leido ? "" : "no-leido"}">
+      <div class="cab"><b>${esc(m.autor)}</b> → ${esc(para)} · ${esc(m.fecha)}
+        ${m.prioridad === "urgente" ? '<span class="chip bad">Urgente</span>' : ""}
+        ${m.orden_id ? `<span class="chip">Orden #${m.orden_id}</span>` : ""}
+        ${m.leido ? "" : `<button onclick="leido(${m.id})">Marcar leído</button>`}</div>
+      <div>${esc(m.texto)}</div></div>`;
+  }).join("") : '<p class="muted">No hay mensajes.</p>';
+}
+async function leido(id) {
+  await api(`/mensajes/${id}/leido/${usuario.id}`, {method: "POST"});
+  cargarMensajes(); contarNoLeidos();
+}
+async function enviarMensaje() {
+  const d = $("m-destino").value;
+  try {
+    await api("/mensajes", {method: "POST", body: {
+      autor_id: usuario.id, texto: $("m-texto").value, prioridad: $("m-prioridad").value,
+      departamento: d.startsWith("d:") ? d.slice(2) : null,
+      destinatario_id: d.startsWith("p:") ? Number(d.slice(2)) : null,
+      orden_id: $("m-orden").value ? Number($("m-orden").value) : null}});
+    $("m-texto").value = ""; $("m-orden").value = "";
+    aviso("Mensaje enviado"); cargarMensajes(); contarNoLeidos();
+  } catch (e) { fallo(e); }
+}
+
+// ---------- Stock general ----------
+let categorias = [], filtroCat = "";   // "" = todo, "g:material" / "g:pieza" = grupo, otro = categoría
+const capital = s => s.charAt(0).toUpperCase() + s.slice(1);
+const GRUPOS = {material: "Materiales", pieza: "Piezas del taller"};
+
+async function cargarAlmacen() {
+  [materiales, categorias, productos] = await Promise.all([api("/materiales"), api("/categorias"), api("/productos")]);
+  const sel = $("a-modelo"), actual = sel.value;
+  sel.innerHTML = `<option value="">Todos</option>` + productos.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join("");
+  sel.value = actual;
+  pintarMateriales();
+  const movs = await api("/movimientos?limite=30");
+  $("tabla-movimientos").innerHTML = movs.map(m => `<tr><td class="muted">${esc(m.fecha)}</td><td>${esc(m.material)}</td>
+    <td><span class="chip ${m.tipo === "entrada" ? "ok" : m.tipo === "salida" ? "" : "warn"}">${m.tipo}</span></td>
+    <td class="num">${m.cantidad > 0 ? "+" : ""}${num(m.cantidad)}</td><td>${esc(m.motivo)}</td><td>${esc(m.trabajador || "")}</td></tr>`).join("")
+    || '<tr><td colspan="6" class="muted">Sin movimientos</td></tr>';
+}
+function filtrarCat(valor) { filtroCat = filtroCat === valor ? "" : valor; pintarMateriales(); }
+function pintarChips() {
+  const chip = (valor, texto, n, bajo) => `<button class="filtro ${filtroCat === valor ? "activo" : ""}"
+      data-cat="${esc(valor)}" onclick="filtrarCat(this.dataset.cat)">${esc(texto)} <span class="n">${n}</span>${bajo ? `<span class="badge" title="Bajo mínimo">${bajo}</span>` : ""}</button>`;
+  const total = materiales.length, totalBajo = materiales.filter(m => m.bajo_minimo).length;
+  $("a-chips").innerHTML = `<div class="chips">${chip("", "Todo", total, totalBajo)}</div>` +
+    Object.entries(GRUPOS).map(([g, titulo]) => {
+      const cs = categorias.filter(c => c.grupo === g);
+      const n = cs.reduce((a, c) => a + c.articulos, 0), bajo = cs.reduce((a, c) => a + c.bajo_minimo, 0);
+      return `<div class="chips"><span class="grupo-titulo">${chip("g:" + g, titulo, n, bajo)}</span>` +
+        cs.map(c => chip(c.nombre, capital(c.nombre), c.articulos, c.bajo_minimo)).join("") + `</div>`;
+    }).join("");
+}
+function pintarMateriales() {
+  pintarChips();
+  const q = $("a-buscar").value.trim().toLowerCase(), modelo = $("a-modelo").value, bajo = $("a-bajo").checked;
+  const lista = materiales.filter(m =>
+    (!q || [m.codigo, m.nombre, m.ubicacion, m.modelo].some(x => (x || "").toLowerCase().includes(q)))
+    && (!filtroCat || (filtroCat.startsWith("g:") ? m.grupo === filtroCat.slice(2) : m.categoria === filtroCat))
+    && (!modelo || String(m.producto_id) === modelo) && (!bajo || m.bajo_minimo));
+  const nombreFiltro = !filtroCat ? "Todo el stock" : filtroCat.startsWith("g:") ? GRUPOS[filtroCat.slice(2)] : capital(filtroCat);
+  $("a-resumen").textContent = `${nombreFiltro}: ${lista.length} artículo(s)` +
+    (lista.some(m => m.bajo_minimo) ? `, ${lista.filter(m => m.bajo_minimo).length} bajo mínimo` : "");
+  $("tabla-materiales").innerHTML = lista.map(m => `<tr>
+    <td><code>${esc(m.codigo)}</code></td><td>${esc(m.nombre)}<div class="muted">${esc(m.modelo ? "Modelo: " + m.modelo : m.proveedor || "")}</div></td>
+    <td><span class="chip ${m.grupo === "pieza" ? "warn" : ""}">${esc(capital(m.categoria))}</span></td><td>${esc(m.ubicacion || "")}</td>
+    <td class="num"><span class="chip ${m.bajo_minimo ? "bad" : "ok"}">${num(m.stock)} ${esc(m.unidad)}</span></td>
+    <td class="num muted">${num(m.stock_minimo)}</td>
+    <td><button onclick="dlgMov(${m.id})">Movimiento</button></td></tr>`).join("")
+    || '<tr><td colspan="7" class="muted">No hay artículos con estos filtros</td></tr>';
+}
+function dlgCategoria() {
+  $("nc-nombre").value = ""; $("nc-grupo").value = "material";
+  $("dlg-categoria").showModal();
+}
+async function guardarCategoria() {
+  try {
+    const c = await api("/categorias", {method: "POST", body: {nombre: $("nc-nombre").value, grupo: $("nc-grupo").value}});
+    $("dlg-categoria").close(); aviso(`Categoría “${esc(capital(c.nombre))}” creada`); cargarAlmacen();
+  } catch (e) { fallo(e); }
+}
+function escaneo() {
+  const codigo = $("a-buscar").value.trim().toUpperCase();
+  const m = materiales.find(m => m.codigo.toUpperCase() === codigo);
+  if (m) { dlgMov(m.id); $("a-buscar").value = ""; pintarMateriales(); }
+}
+function dlgMov(id) {
+  movActual = materiales.find(m => m.id === id);
+  $("mov-titulo").textContent = movActual.nombre;
+  $("mov-info").textContent = `Stock actual: ${num(movActual.stock)} ${movActual.unidad} · ${movActual.ubicacion || "sin ubicación"}`;
+  $("mov-tipo").value = "entrada"; $("mov-cantidad").value = ""; $("mov-motivo").value = "";
+  ajustarDlgMov();
+  $("dlg-mov").showModal(); $("mov-cantidad").focus();
+}
+function ajustarDlgMov() {
+  $("mov-cant-label").firstChild.textContent = $("mov-tipo").value === "recuento"
+    ? `Cantidad contada (${movActual.unidad})` : `Cantidad (${movActual.unidad})`;
+}
+async function guardarMov() {
+  const tipo = $("mov-tipo").value, cantidad = Number($("mov-cantidad").value);
+  try {
+    const body = tipo === "recuento"
+      ? {stock_real: cantidad, trabajador_id: usuario.id}
+      : {cantidad, motivo: $("mov-motivo").value || null, trabajador_id: usuario.id};
+    const m = await api(`/materiales/${movActual.id}/${tipo}`, {method: "POST", body});
+    $("dlg-mov").close();
+    aviso(`${esc(m.nombre)}: ahora hay ${num(m.stock)} ${esc(m.unidad)}` + (m.bajo_minimo ? " — <b>bajo mínimo</b>" : ""));
+    cargarAlmacen(); contarNoLeidos();
+  } catch (e) { fallo(e); }
+}
+async function dlgMaterial() {
+  const [cats, prods] = await Promise.all([api("/categorias"), api("/productos")]);
+  $("dlg-material").querySelectorAll("input").forEach(i => i.value = i.type === "number" ? 0 : "");
+  $("nm-categoria").innerHTML = Object.entries(GRUPOS).map(([g, titulo]) => `<optgroup label="${titulo}">` +
+    cats.filter(c => c.grupo === g).map(c => `<option value="${esc(c.nombre)}">${esc(capital(c.nombre))}</option>`).join("") + `</optgroup>`).join("");
+  if (filtroCat && !filtroCat.startsWith("g:")) $("nm-categoria").value = filtroCat;
+  $("nm-modelo").innerHTML = `<option value="">— Ninguno —</option>` + prods.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join("");
+  $("dlg-material").showModal();
+}
+async function guardarMaterial() {
+  try {
+    await api("/materiales", {method: "POST", body: {
+      codigo: $("nm-codigo").value.trim().toUpperCase(), nombre: $("nm-nombre").value.trim(),
+      categoria: $("nm-categoria").value, unidad: $("nm-unidad").value,
+      stock: Number($("nm-stock").value), stock_minimo: Number($("nm-minimo").value),
+      ubicacion: $("nm-ubicacion").value || null, proveedor: $("nm-proveedor").value || null,
+      producto_id: $("nm-modelo").value ? Number($("nm-modelo").value) : null}});
+    $("dlg-material").close(); aviso("Artículo creado");
+    if ($("dlg-modelo").open) refrescarSelectsMaterial(); else cargarAlmacen();
+  } catch (e) { fallo(e); }
+}
+
+// ---------- Órdenes ----------
+async function cargarOrdenes() {
+  productos = await api("/productos");
+  const sel = $("o-producto"), actual = sel.value;
+  sel.innerHTML = productos.map(p => `<option value="${p.id}">${esc(p.nombre)} (${p.stock} en stock)</option>`).join("");
+  if (actual) sel.value = actual;
+  infoProducto();
+  const f = $("o-filtro").value;
+  const qs = f === "abiertas" ? "?abiertas=true" : f ? `?tipo=${f}` : "";
+  const ordenes = await api("/ordenes" + qs);
+  $("tabla-ordenes").innerHTML = ordenes.map(o => {
+    const pasos = o.tipo === "cliente" ? FLUJO : FLUJO.slice(0, -1);
+    const i = pasos.indexOf(o.estado);
+    return `<tr><td>${o.id}</td><td>${esc(o.producto)}${o.notas ? `<div class="muted">${esc(o.notas)}</div>` : ""}</td>
+      <td class="num">${o.cantidad}</td>
+      <td>${o.tipo === "cliente" ? `<span class="chip warn">${esc(o.cliente)}</span>` : '<span class="chip">Stock</span>'}</td>
+      <td>${o.estado}</td>
+      <td><div class="pasos" title="${pasos.join(" → ")}">${pasos.slice(1).map((_, k) => `<span class="${k < i ? "hecho" : ""}"></span>`).join("")}</div></td>
+      <td>${o.siguiente ? `<button onclick="avanzar(${o.id})">Pasar a ${o.siguiente}</button>` : '<span class="chip ok">Finalizada</span>'}</td></tr>`;
+  }).join("") || '<tr><td colspan="7" class="muted">No hay órdenes</td></tr>';
+}
+async function infoProducto() {
+  const p = productos.find(p => String(p.id) === $("o-producto").value);
+  const cantidad = Number($("o-cantidad").value) || 1, cliente = $("o-cliente").value.trim();
+  const chk = $("o-desde-stock");
+  chk.disabled = !p || !cliente || p.stock < cantidad;
+  if (chk.disabled) chk.checked = false;
+  if (!p) { $("o-info").textContent = ""; $("o-necesidades").innerHTML = ""; return; }
+  $("o-info").textContent = `Producto terminado disponible: ${p.stock}`;
+  const nec = await api(`/productos/${p.id}/necesidades?cantidad=${cantidad}`);
+  const faltan = nec.filter(n => n.falta > 0);
+  $("o-necesidades").innerHTML = faltan.length
+    ? `<p class="chip bad" style="display:block;padding:8px 12px;border-radius:6px">Falta material para fabricar: ` +
+      faltan.map(f => `${num(f.falta)} ${esc(f.unidad)} de ${esc(f.nombre)}`).join(", ") + `</p>`
+    : `<p class="muted">Hay material suficiente para fabricar ${cantidad}.</p>`;
+}
+async function crearOrden() {
+  try {
+    const o = await api("/ordenes", {method: "POST", body: {
+      producto_id: Number($("o-producto").value), cantidad: Number($("o-cantidad").value),
+      cliente: $("o-cliente").value.trim() || null, notas: $("o-notas").value.trim() || null,
+      desde_stock: $("o-desde-stock").checked}});
+    aviso(`Orden #${o.id} creada (${o.estado})`);
+    $("o-cliente").value = ""; $("o-notas").value = ""; $("o-cantidad").value = 1;
+    cargarOrdenes(); contarNoLeidos();
+  } catch (e) { fallo(e); }
+}
+async function avanzar(id) {
+  try {
+    const o = await api(`/ordenes/${id}/avanzar`, {method: "POST", body: {trabajador_id: usuario.id}});
+    aviso(`Orden #${o.id} → ${o.estado}`); cargarOrdenes(); contarNoLeidos();
+  } catch (e) { fallo(e); }
+}
+
+// ---------- Productos ----------
+async function cargarProductos() {
+  productos = await api("/productos");
+  const detalles = await Promise.all(productos.map(p => api(`/productos/${p.id}`)));
+  $("lista-productos").innerHTML = detalles.map(p => `<div class="panel">
+    <div class="fila"><h2 class="grow" style="margin:0">${esc(p.nombre)} <span class="muted">${esc(p.codigo)}</span></h2>
+    <span class="chip ${p.stock ? "ok" : ""}">${p.stock} terminados en stock</span></div>
+    <table style="margin-top:10px"><thead><tr><th>Material</th><th class="num">Por unidad</th></tr></thead><tbody>
+    ${p.escandallo.map(e => `<tr><td>${esc(e.nombre)} <span class="muted">${esc(e.codigo)}</span></td><td class="num">${num(e.cantidad)} ${esc(e.unidad)}</td></tr>`).join("")
+      || '<tr><td colspan="2" class="muted">Sin escandallo</td></tr>'}
+    </tbody></table></div>`).join("") || '<p class="muted">No hay productos.</p>';
+}
+async function dlgProducto() {
+  materiales = await api("/materiales");
+  $("np-codigo").value = ""; $("np-nombre").value = ""; $("np-lineas").innerHTML = "";
+  lineaEscandallo();
+  $("dlg-producto").showModal();
+}
+function lineaEscandallo() {
+  const div = document.createElement("div");
+  div.className = "fila"; div.style.marginBottom = "8px";
+  div.innerHTML = `<select class="grow">${materiales.map(m => `<option value="${m.id}">${esc(m.nombre)} (${esc(m.unidad)})</option>`).join("")}</select>
+    <input type="number" min="0" step="any" placeholder="Cant." style="width:90px">
+    <button onclick="this.parentElement.remove()">✕</button>`;
+  $("np-lineas").appendChild(div);
+}
+async function guardarProducto() {
+  const escandallo = [...$("np-lineas").children].map(d => ({
+    material_id: Number(d.querySelector("select").value), cantidad: Number(d.querySelector("input").value)}))
+    .filter(l => l.cantidad > 0);
+  try {
+    await api("/productos", {method: "POST", body: {codigo: $("np-codigo").value.trim().toUpperCase(),
+      nombre: $("np-nombre").value.trim(), escandallo}});
+    $("dlg-producto").close(); aviso("Producto creado"); cargarProductos();
+  } catch (e) { fallo(e); }
+}
+
+// ---------- Modelos de sofás (corte) ----------
+let modelos = [], modeloEditando = null;
+const cm = v => v == null ? "—" : `${num(v)} cm`;
+
+async function cargarModelos() {
+  const lista = await api("/productos");
+  modelos = await Promise.all(lista.map(p => api(`/productos/${p.id}`)));
+  pintarModelos();
+}
+function pintarModelos() {
+  const q = $("mo-buscar").value.trim().toLowerCase();
+  const lista = modelos.filter(m => !q || [m.nombre, m.codigo, m.forma].some(x => (x || "").toLowerCase().includes(q)));
+  $("lista-modelos").innerHTML = lista.map(m => `<div class="panel"><div class="modelo">
+    ${m.imagen ? `<img class="foto-sofa" src="${urlFoto(m.imagen)}" alt="${esc(m.nombre)}" loading="lazy"
+        onclick="verFoto('${urlFoto(m.imagen)}', this.alt)">` : '<div class="foto-sofa sin-foto">Sin foto del sofá</div>'}
+    <div class="datos">
+    <div class="fila"><h2 class="grow" style="margin:0">${esc(m.nombre)} <span class="muted">${esc(m.codigo)}</span></h2>
+      <button onclick="dlgModelo(${m.id})">Editar</button></div>
+    <div class="ficha">
+      <div>Forma<b>${esc(m.forma || "—")}</b></div><div>Ancho<b>${cm(m.ancho_cm)}</b></div>
+      <div>Fondo<b>${cm(m.fondo_cm)}</b></div><div>Alto<b>${cm(m.alto_cm)}</b></div>
+      <div>Alto asiento<b>${cm(m.alto_asiento_cm)}</b></div>
+    </div>
+    ${m.descripcion ? `<p style="margin:0 0 10px">${esc(m.descripcion)}</p>` : ""}
+    <table><thead><tr><th style="width:64px">Foto</th><th>Pieza</th><th>Tipo</th><th>Material</th><th>Medidas</th><th class="num">Cant.</th><th>Notas</th></tr></thead><tbody>
+    ${m.preparado.map(l => `<tr><td>${l.imagen ? `<img class="mini" src="${urlFoto(l.imagen)}" loading="lazy"
+        alt="${esc(l.pieza + (l.tipo ? " · " + l.tipo : "") + (l.medidas ? " · " + l.medidas : ""))}"
+        onclick="verFoto('${urlFoto(l.imagen)}', this.alt)">` : ""}</td><td><b>${esc(l.pieza)}</b></td><td>${esc(l.tipo || "")}</td>
+      <td>${esc(l.descripcion || l.material || "")}${l.material && l.descripcion ? `<div class="muted">${esc(l.material)} · ${esc(l.material_codigo)}</div>` : ""}</td>
+      <td>${esc(l.medidas || "")}</td><td class="num">${l.cantidad == null ? "" : num(l.cantidad)}</td><td>${esc(l.notas || "")}</td></tr>`).join("")
+      || '<tr><td colspan="7" class="muted">Preparado sin rellenar todavía</td></tr>'}
+    </tbody></table></div></div></div>`).join("") || '<p class="muted">No hay modelos. Pulsa “+ Nuevo modelo”.</p>';
+}
+async function dlgModelo(id) {
+  materiales = await api("/materiales");
+  modeloEditando = id ? modelos.find(m => m.id === id) : null;
+  const m = modeloEditando || {preparado: []};
+  $("mo-titulo").textContent = id ? `Editar ${m.nombre}` : "Nuevo modelo";
+  $("mo-codigo").value = m.codigo || ""; $("mo-codigo").disabled = !!id;
+  $("mo-nombre").value = m.nombre || ""; $("mo-forma").value = m.forma || "";
+  $("mo-ancho").value = m.ancho_cm ?? ""; $("mo-fondo").value = m.fondo_cm ?? "";
+  $("mo-alto").value = m.alto_cm ?? ""; $("mo-alto-asiento").value = m.alto_asiento_cm ?? "";
+  $("mo-descripcion").value = m.descripcion || "";
+  ponerFotoModelo(m.imagen || null);
+  $("mo-lineas").innerHTML = "";
+  (m.preparado.length ? m.preparado : [{}]).forEach(lineaPreparado);
+  $("dlg-modelo").showModal();
+}
+const opcionesMaterial = sel => `<option value="">— Escrito a mano —</option>` +
+  materiales.map(x => `<option value="${x.id}" ${String(x.id) === String(sel) ? "selected" : ""}>${esc(x.nombre)} (${esc(x.unidad)})</option>`).join("");
+function lineaPreparado(l = {}) {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td style="width:110px"><div class="foto-celda"><input type="hidden" data-c="imagen">
+      <input type="file" accept="image/*" class="oculto" onchange="fotoPiezaElegida(this)"><span class="hueco"></span></div></td>
+    <td style="width:12%"><input data-c="pieza" list="piezas" value="${esc(l.pieza)}" placeholder="Asiento"></td>
+    <td style="width:10%"><input data-c="tipo" list="tipos" value="${esc(l.tipo)}" placeholder="Goma"></td>
+    <td style="width:20%"><select data-c="material_id">${opcionesMaterial(l.material_id)}</select></td>
+    <td style="width:18%"><input data-c="descripcion" value="${esc(l.descripcion)}" placeholder="HR35 densidad 35"></td>
+    <td style="width:13%"><input data-c="medidas" value="${esc(l.medidas)}" placeholder="60 x 55 x 10 cm"></td>
+    <td style="width:7%"><input data-c="cantidad" type="number" min="0" step="any" value="${l.cantidad ?? ""}"></td>
+    <td><input data-c="notas" value="${esc(l.notas)}"></td>
+    <td><button title="Quitar esta línea" onclick="this.closest('tr').remove()">✕<span class="solo-movil"> Quitar esta línea</span></button></td>`;
+  $("mo-lineas").appendChild(tr);
+  ponerFotoPieza(tr, l.imagen || null);
+}
+
+// ---------- Fotos ----------
+const urlFoto = nombre => `/imagenes/${encodeURIComponent(nombre)}`;
+function verFoto(url, pie) {
+  $("visor-img").src = url; $("visor-pie").textContent = pie || "";
+  $("visor").showModal();
+}
+// Reduce la foto en el navegador (máx. 1600 px, JPEG) antes de subirla: las del móvil pasan de 5 MB a ~300 KB.
+async function subirFoto(fichero) {
+  if (!fichero.type.startsWith("image/")) throw new Error("Eso no es una imagen");
+  const img = await new Promise((ok, mal) => {
+    const i = new Image(); i.onload = () => ok(i); i.onerror = () => mal(new Error("No se puede leer la imagen"));
+    i.src = URL.createObjectURL(fichero);
+  });
+  const escala = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * escala); c.height = Math.round(img.naturalHeight * escala);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(img.src);
+  return (await api("/imagenes", {method: "POST", body: {data: c.toDataURL("image/jpeg", 0.85)}})).nombre;
+}
+function ponerFotoModelo(nombre) {
+  $("mo-imagen").value = nombre || "";
+  $("mo-foto-vista").innerHTML = nombre
+    ? `<img src="${urlFoto(nombre)}" alt="Foto del sofá" style="cursor:zoom-in" onclick="verFoto(this.src, 'Foto del sofá')">`
+    : '<div class="vacia">Sin foto</div>';
+  $("mo-foto-quitar").classList.toggle("oculto", !nombre);
+}
+async function fotoModeloElegida(input) {
+  const f = input.files[0]; input.value = "";
+  if (!f) return;
+  try { aviso("Subiendo foto…"); ponerFotoModelo(await subirFoto(f)); aviso("Foto lista; pulsa Guardar modelo"); }
+  catch (e) { fallo(e); }
+}
+function ponerFotoPieza(tr, nombre) {
+  tr.querySelector('[data-c="imagen"]').value = nombre || "";
+  tr.querySelector(".hueco").innerHTML = nombre
+    ? `<img class="mini" src="${urlFoto(nombre)}" alt="Foto de la pieza" title="Cambiar foto"
+         onclick="this.closest('.foto-celda').querySelector('input[type=file]').click()">
+       <button title="Quitar foto" onclick="ponerFotoPieza(this.closest('tr'), null)">✕</button>`
+    : `<div class="vacia" title="Añadir foto de la pieza"
+         onclick="this.closest('.foto-celda').querySelector('input[type=file]').click()">+ Foto</div>`;
+}
+async function fotoPiezaElegida(input) {
+  const f = input.files[0], tr = input.closest("tr"); input.value = "";
+  if (!f) return;
+  try { aviso("Subiendo foto…"); ponerFotoPieza(tr, await subirFoto(f)); aviso("Foto lista; pulsa Guardar modelo"); }
+  catch (e) { fallo(e); }
+}
+async function refrescarSelectsMaterial() {
+  materiales = await api("/materiales");
+  $("mo-lineas").querySelectorAll('select[data-c="material_id"]').forEach(s => s.innerHTML = opcionesMaterial(s.value));
+}
+async function guardarModelo() {
+  const val = id => $(id).value.trim();
+  const numero = id => val(id) === "" ? null : Number(val(id));
+  const preparado = [...$("mo-lineas").children].map(tr => {
+    const l = {};
+    tr.querySelectorAll("[data-c]").forEach(e => l[e.dataset.c] = e.value.trim() || null);
+    l.material_id = l.material_id ? Number(l.material_id) : null;
+    l.cantidad = l.cantidad == null ? null : Number(l.cantidad);
+    return l;
+  }).filter(l => Object.values(l).some(v => v != null));
+  const body = {nombre: val("mo-nombre"), forma: val("mo-forma") || null, ancho_cm: numero("mo-ancho"),
+    fondo_cm: numero("mo-fondo"), alto_cm: numero("mo-alto"), alto_asiento_cm: numero("mo-alto-asiento"),
+    descripcion: val("mo-descripcion") || null, imagen: $("mo-imagen").value || null, preparado};
+  try {
+    if (modeloEditando) await api(`/productos/${modeloEditando.id}/ficha`, {method: "PUT", body});
+    else await api("/productos", {method: "POST", body: {...body, codigo: val("mo-codigo")}});
+    $("dlg-modelo").close(); aviso("Modelo guardado"); cargarModelos();
+  } catch (e) { fallo(e); }
+}
+
+// ---------- Compras (oficina) ----------
+let pedidosCompra = [], pedidoRecibiendo = null, materialesCompra = [];
+const ESTADO_COMPRA = {borrador: ["", "Borrador"], enviado: ["warn", "Enviado"], recibido: ["ok", "Recibido"], cancelado: ["bad", "Cancelado"]};
+
+async function cargarCompras() {
+  const [sug, provs, mats] = await Promise.all([api("/compras/sugerencias"), api("/compras/proveedores"), api("/materiales?grupo=material")]);
+  materialesCompra = mats;
+  $("c-proveedores").innerHTML = provs.map(p => `<option value="${esc(p)}">`).join("");
+  if (!$("c-lineas").children.length) lineaCompra();
+  $("c-sugerencias").innerHTML = sug.length ? sug.map((g, i) => `<div class="panel" style="background:var(--bg)">
+    <div class="fila" style="margin-bottom:8px"><h2 class="grow" style="margin:0">${esc(g.proveedor)}</h2>
+      <button class="primario" onclick="pedirSugerencia(${i})">Crear pedido a ${esc(g.proveedor)}</button></div>
+    <table data-sug="${i}" data-proveedor="${esc(g.proveedor)}"><thead><tr><th style="width:30px"></th><th>Material</th>
+      <th class="num">Stock</th><th class="num">Mínimo</th><th class="num">Ya pedido</th><th style="width:140px">Pedir</th></tr></thead><tbody>
+    ${g.lineas.map(l => `<tr data-material="${l.material_id}"><td><input type="checkbox" checked></td>
+      <td>${esc(l.nombre)} <span class="muted">${esc(l.codigo)}</span></td>
+      <td class="num"><span class="chip bad">${num(l.stock)} ${esc(l.unidad)}</span></td><td class="num">${num(l.stock_minimo)}</td>
+      <td class="num">${l.ya_pedido ? num(l.ya_pedido) : "—"}</td>
+      <td><input type="number" min="0" step="any" value="${l.cantidad_sugerida}" style="width:90px"> ${esc(l.unidad)}</td></tr>`).join("")}
+    </tbody></table></div>`).join("") : '<p class="muted">Todo en orden: no hay materiales bajo mínimo sin pedir.</p>';
+  cargarPedidosCompra();
+}
+async function pedirSugerencia(i) {
+  const tabla = document.querySelector(`table[data-sug="${i}"]`);
+  const lineas = [...tabla.querySelectorAll("tbody tr")]
+    .filter(tr => tr.querySelector('input[type="checkbox"]').checked)
+    .map(tr => ({material_id: Number(tr.dataset.material), cantidad: Number(tr.querySelector('input[type="number"]').value)}))
+    .filter(l => l.cantidad > 0);
+  if (!lineas.length) return aviso("Marca al menos un material con cantidad", false);
+  try {
+    const p = await api("/compras/pedidos", {method: "POST", body: {proveedor: tabla.dataset.proveedor, lineas, trabajador_id: usuario.id}});
+    aviso(`Pedido #${p.id} a ${esc(p.proveedor)} creado como borrador`); cargarCompras();
+  } catch (e) { fallo(e); }
+}
+function lineaCompra() {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td><select>${materialesCompra.map(m => `<option value="${m.id}">${esc(m.nombre)} (${esc(m.unidad)})${m.proveedor ? " · " + esc(m.proveedor) : ""}</option>`).join("")}</select></td>
+    <td><input type="number" min="0" step="any" placeholder="Cantidad"></td>
+    <td><button title="Quitar esta línea" onclick="this.closest('tr').remove()">✕<span class="solo-movil"> Quitar esta línea</span></button></td>`;
+  $("c-lineas").appendChild(tr);
+}
+async function crearPedidoManual() {
+  const lineas = [...$("c-lineas").children].map(tr => ({material_id: Number(tr.querySelector("select").value),
+    cantidad: Number(tr.querySelector("input").value)})).filter(l => l.cantidad > 0);
+  try {
+    const p = await api("/compras/pedidos", {method: "POST", body: {proveedor: $("c-proveedor").value.trim(),
+      notas: $("c-notas").value.trim() || null, lineas, trabajador_id: usuario.id}});
+    $("c-proveedor").value = ""; $("c-notas").value = ""; $("c-lineas").innerHTML = ""; lineaCompra();
+    aviso(`Pedido #${p.id} creado como borrador`); cargarCompras();
+  } catch (e) { fallo(e); }
+}
+async function cargarPedidosCompra() {
+  const f = $("c-filtro").value;
+  pedidosCompra = await api("/compras/pedidos" + (f ? `?estado=${f}` : ""));
+  $("c-pedidos").innerHTML = pedidosCompra.map(p => {
+    const [clase, texto] = ESTADO_COMPRA[p.estado];
+    return `<tr><td>${p.id}</td><td><b>${esc(p.proveedor)}</b>${p.notas ? `<div class="muted">${esc(p.notas)}</div>` : ""}</td>
+      <td>${p.lineas.map(l => `${num(l.cantidad)} ${esc(l.unidad)} ${esc(l.nombre)}` +
+        (l.cantidad_recibida != null && l.cantidad_recibida !== l.cantidad ? ` <span class="chip bad">llegó ${num(l.cantidad_recibida)}</span>` : "")).join("<br>")}</td>
+      <td><span class="chip ${clase}">${texto}</span></td>
+      <td class="muted">Creado ${esc(p.fecha_creacion)}${p.creado_por_nombre ? " · " + esc(p.creado_por_nombre) : ""}
+        ${p.fecha_envio ? `<br>Enviado ${esc(p.fecha_envio)}` : ""}${p.fecha_recepcion ? `<br>Recibido ${esc(p.fecha_recepcion)}` : ""}</td>
+      <td style="white-space:nowrap"><button onclick="imprimirPedido(${p.id})">Imprimir</button>
+        ${p.estado === "borrador" ? `<button onclick="accionCompra(${p.id}, 'enviar')">Marcar enviado</button>` : ""}
+        ${p.estado === "enviado" ? `<button class="primario" onclick="dlgRecibir(${p.id})">Ha llegado</button>` : ""}
+        ${["borrador", "enviado"].includes(p.estado) ? `<button onclick="accionCompra(${p.id}, 'cancelar')">Cancelar</button>` : ""}</td></tr>`;
+  }).join("") || '<tr><td colspan="6" class="muted">No hay pedidos</td></tr>';
+}
+async function accionCompra(id, accion) {
+  if (accion === "cancelar" && !confirm(`¿Cancelar el pedido #${id}?`)) return;
+  try {
+    const p = await api(`/compras/pedidos/${id}/${accion}`, {method: "POST"});
+    aviso(`Pedido #${p.id}: ${ESTADO_COMPRA[p.estado][1].toLowerCase()}`); cargarCompras();
+  } catch (e) { fallo(e); }
+}
+function dlgRecibir(id) {
+  pedidoRecibiendo = pedidosCompra.find(p => p.id === id);
+  $("r-titulo").textContent = `Recibir pedido #${id} — ${pedidoRecibiendo.proveedor}`;
+  $("r-lineas").innerHTML = pedidoRecibiendo.lineas.map(l => `<tr data-material="${l.material_id}">
+    <td>${esc(l.nombre)}</td><td class="num">${num(l.cantidad)} ${esc(l.unidad)}</td>
+    <td><input type="number" min="0" step="any" value="${l.cantidad}" style="width:100px"></td></tr>`).join("");
+  $("dlg-recibir").showModal();
+}
+async function confirmarRecepcion() {
+  const lineas = [...$("r-lineas").children].map(tr => ({material_id: Number(tr.dataset.material),
+    cantidad: Number(tr.querySelector("input").value)}));
+  try {
+    const p = await api(`/compras/pedidos/${pedidoRecibiendo.id}/recibir`, {method: "POST", body: {trabajador_id: usuario.id, lineas}});
+    $("dlg-recibir").close();
+    const completo = p.lineas.every(l => l.cantidad_recibida >= l.cantidad);
+    aviso(`Pedido #${p.id} recibido${completo ? "" : " (incompleto, se ha avisado a almacén)"}. Stock actualizado.`, completo);
+    cargarCompras(); contarNoLeidos();
+  } catch (e) { fallo(e); }
+}
+function imprimirPedido(id) {
+  const p = pedidosCompra.find(p => p.id === id);
+  const w = window.open("", "_blank");
+  if (!w) return aviso("El navegador ha bloqueado la ventana de impresión", false);
+  w.document.write(`<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Pedido ${p.id} - ${esc(p.proveedor)}</title>
+    <style>body{font:14px system-ui,sans-serif;margin:40px;color:#222}h1{font-size:22px;margin:0}
+    table{width:100%;border-collapse:collapse;margin-top:24px}th,td{border-bottom:1px solid #ccc;padding:8px;text-align:left}
+    td.n{text-align:right}.cab{display:flex;justify-content:space-between;margin-top:24px}</style></head><body>
+    <h1>ERP Taller</h1><div>Pedido de compra nº ${p.id}</div>
+    <div class="cab"><div><b>Proveedor:</b> ${esc(p.proveedor)}</div><div><b>Fecha:</b> ${esc((p.fecha_envio || p.fecha_creacion).slice(0, 10))}</div></div>
+    <table><thead><tr><th>Código</th><th>Material</th><th style="text-align:right">Cantidad</th></tr></thead><tbody>
+    ${p.lineas.map(l => `<tr><td>${esc(l.codigo)}</td><td>${esc(l.nombre)}</td><td class="n">${num(l.cantidad)} ${esc(l.unidad)}</td></tr>`).join("")}
+    </tbody></table>${p.notas ? `<p style="margin-top:24px"><b>Notas:</b> ${esc(p.notas)}</p>` : ""}
+    <script>window.onload = () => window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+// ---------- Móvil: títulos de columna en cada dato ----------
+// En pantallas estrechas las tablas se muestran como tarjetas; cada celda necesita saber
+// el título de su columna. Se pone solo, cada vez que se pinta una tabla.
+function etiquetarTablas() {
+  document.querySelectorAll("table").forEach(t => {
+    const titulos = [...t.querySelectorAll("thead th")].map(th => th.textContent.trim());
+    if (!titulos.length) return;
+    t.querySelectorAll("tbody tr").forEach(tr => [...tr.children].forEach((td, i) => {
+      if (td.hasAttribute("colspan")) { td.dataset.label = ""; td.classList.add("vacio"); }
+      else if (!("label" in td.dataset)) td.dataset.label = titulos[i] || "";
+    }));
+  });
+}
+let etiquetado = false;
+new MutationObserver(() => {
+  if (etiquetado) return;
+  etiquetado = true;
+  requestAnimationFrame(() => { etiquetado = false; etiquetarTablas(); });
+}).observe(document.body, {childList: true, subtree: true});
+
+inicio().catch(fallo);
+</script>
+</body>
+</html>
